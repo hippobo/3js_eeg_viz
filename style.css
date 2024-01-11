@@ -6,3 +6,25 @@ head, body {
 canvas {
     display: block;
 }
+
+#randomButton {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    outline: none;
+  }
+  
+  #randomButton:hover {
+    background-color: #0056b3;
+  }
+  
+

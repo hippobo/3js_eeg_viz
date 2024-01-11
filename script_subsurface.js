@@ -15,43 +15,24 @@ import * as THREE from 'three';
 		const lights = {};
 		let lowerBound;
 		let upperBound;
-		let fp1;
-		let fp2;
-		let f7;
-		let f3;
-		let fz;
-		let f4;
-		let f8;
-		let a1;
-		let t3;
-		let c3;
-		let cz;
-		let c4;
-		let t4;
-		let a2;
-		let t5;
-		let p3;
-		let pz;
-		let p4;
-		let t6;
-		let o1;
-		let o2;
-
+		const canvas = document.getElementById('canvas');
 		const lightNames = ['fp1', 'fp2', 'fz', 'f3', 'f4', 'f7', 'f8', 'fc1', 'fc2', 'fc5', 'fc6' , 'cz', 'c3', 'c4', 't3', 't4', 'a1' ,'a2', 'cp1', 'cp2', 'cp5', 'cp6', 'pz', 'p3','p4', 't5', 't6', 'po3', 'po4', 'oz', 'o1', 'o2'];
 
-		// Function to create a light
 		function createLight(name) {
-			const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), new THREE.MeshBasicMaterial({ color: 0xc1c100 }));
-			const pointLight = new THREE.PointLight(0xc1c100, 0, 50, 0);
+			const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.001, 8, 8), new THREE.MeshBasicMaterial({ color: 0xc1c100 }));
+			const pointLight = new THREE.PointLight(0xc1c100, 0.5, 50, 0);
 			lightMesh.add(pointLight); 
 			scene.add(lightMesh);
 			return lightMesh;
 }
 
 	
-				// Global variable to store EEG data
-				let globalEEGData = null;
-		let currentDataPoint = 0; // To keep track of the current data point in EEG data
+		let globalEEGData = null;
+		let currentDataPoint = 0; 
+		let videoClipIndex = 0;
+	let interpolationFrames = 30;
+
+
 
 		
 		
@@ -84,7 +65,7 @@ import * as THREE from 'three';
 		});
 
 		// Fetch the EEG data
-		fetch('./eeg_data.json')
+		fetch('./eeg_data_sub1.json')
 			.then((response) => response.json())
 			.then((eegData) => {
 				globalEEGData = eegData; // Store the data in the global variable
@@ -105,31 +86,56 @@ import * as THREE from 'three';
 
 			
 		
-		lights['fp1'].position.set(-29, -16, -102);
+		lights['fp1'].position.set(-33, -16, -102);
 		lights['fp2'].position.set(33, -16, -102);
+
 		lights['f7'].position.set(-60, -16, -60);
+		lights['f8'].position.set(60, -16, -60);
+
+
 		lights['f3'].position.set(-40, 30, -60);
+		lights['f4'].position.set(40, 30, -60);
+
 		lights['fz'].position.set(0, 50, -60);
-		lights['f4'].position.set(30, 50, -60);
-		lights['f8'].position.set(50, 20, -80);
+		lights['pz'].position.set(0, 60, 70);
+		
 		lights['a1'].position.set(-90, -16, 0);
-		lights['t3'].position.set(-66, -16, 0);
+		lights['a2'].position.set(90, -16, 0);
+
+
+		lights['t3'].position.set(-66, 0, 0);
+		lights['t4'].position.set(66, 0, 0);
+
+
 		lights['c3'].position.set(-60, 50, 0);
 		lights['cz'].position.set(0, 80, 0);
-		lights['c4'].position.set(50, 40, 0);
-		lights['t4'].position.set(66, 0, 0);
-		lights['a2'].position.set(90, -16, 0);
+		lights['c4'].position.set(60, 40, 0);
+		
+		
 		lights['t5'].position.set(-80,-10, 30);
 		lights['p3'].position.set(-60, 50, 70);
-		lights['pz'].position.set(0, 60, 70);
+	
 		lights['p4'].position.set(60, 50, 70);
 		lights['t6'].position.set(80,-10, 30);
 		lights['o1'].position.set(-40, -10, 90);
 		lights['o2'].position.set(40, -10, 90);
+		lights['oz'].position.set(0, -5, 100);
+		lights['fc1'].position.set(-25, 50, -30);
+		lights['fc2'].position.set(25, 50, -30);
+		lights['fc5'].position.set(-60, 20, -20);
+		lights['fc6'].position.set(60, 20, -20);
+		lights['cp1'].position.set(-25, 60, 40);
+		lights['cp2'].position.set(25, 60, 40);
+		lights['cp5'].position.set(-50, 40, 50);
+		lights['cp6'].position.set(50, 40, 50);
+
+		lights['po3'].position.set(-30, 15, 80);
+		lights['po4'].position.set(30, 15, 80);
+		
 
 
 
-			renderer = new THREE.WebGLRenderer( { antialias: true} );
+			renderer = new THREE.WebGLRenderer( { canvas : canvas, antialias: true} );
 			renderer.setPixelRatio( window.devicePixelRatio );
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			container.appendChild( renderer.domElement );
@@ -140,7 +146,7 @@ import * as THREE from 'three';
             // Helpers
         const axesHelper = new THREE.AxesHelper( 1000);
         axesHelper.setColors(0xff0000, 0x00ff00, 0x0000ff); // R, G, B
-        scene.add(axesHelper);
+        // scene.add(axesHelper);
 
 			stats = new Stats();
 			container.appendChild( stats.dom );
@@ -195,7 +201,7 @@ import * as THREE from 'three';
 			// LOADER
 
             const loaderOBJ = new OBJLoader();
-            loaderOBJ.load('freesurff.Obj', function ( object ) {
+            loaderOBJ.load('brain_model.obj', function ( object ) {
                 model = object.children[ 0 ];
                 model.position.set( 0, 0, 0 );
                 model.scale.setScalar( 50);
@@ -229,55 +235,57 @@ import * as THREE from 'three';
 		}
 		
 		function normalizeValue(value, lowerBound, upperBound) {	
-		
-			return 1 + ((value - lowerBound) * 9) / (upperBound - lowerBound);
+			
+			return  (10 - (-10)) * ((value - lowerBound)/(upperBound - lowerBound)) - 10;
 		}
 		
+		document.getElementById('randomButton').addEventListener('click', () => {
+			const maxVideoClips = 28; 
+			videoClipIndex = Math.floor(Math.random() * maxVideoClips);
+			currentDataPoint = 0; 
+			document.getElementById('exampleNum').innerText = videoClipIndex; 
+			console.log('Random videoClipIndex:', videoClipIndex); 
+		});
+		
+		document.getElementById('interpolationSlider').addEventListener('input', (event) => {
+			const sliderValue = event.target.value;
+			interpolationFrames = sliderValue; // Update interpolation frames based on slider
+		});
+
+	
+	
 	
 		
 		
-		function updateLightIntensities() {
-			if (!globalEEGData || !globalEEGData.length) return;
-		
-			const videoClipIndex = 0;
-			const numberOfElectrodes = 32;
-		
-			
-			
-		
-			if (currentDataPoint < globalEEGData[videoClipIndex][0].length) {
-				for (let i = 0; i < numberOfElectrodes; i++) {
-					if (lights[lightNames[i]] && lights[lightNames[i]].children[0]) {
-						const electrodeData = globalEEGData[videoClipIndex][i];
-						const rawIntensity = electrodeData[currentDataPoint];
-						
 
-						const normalizedIntensity = normalizeValue(rawIntensity, lowerBound, upperBound);
-						lights[lightNames[i]].children[0].intensity = normalizedIntensity;
-					}
+	lightNames.forEach(name => {
+		lights[name].currentIntensity = lights[name].children[0].intensity; // Store the initial intensity
+		lights[name].targetIntensity = lights[name].children[0].intensity; // Set a target intensity
+	});
+	
+	function updateLightIntensities() {
+		if (!globalEEGData || !globalEEGData.length) return;
+	
+		const numberOfElectrodes = 32;
+		if (currentDataPoint < globalEEGData[videoClipIndex][0].length) {
+			for (let i = 0; i < numberOfElectrodes; i++) {
+				if (lights[lightNames[i]] && lights[lightNames[i]].children[0]) {
+					const electrodeData = globalEEGData[videoClipIndex][i];
+					const rawIntensity = electrodeData[currentDataPoint];
+					lights[lightNames[i]].targetIntensity = normalizeValue(rawIntensity, lowerBound, upperBound);
+	
+					// Perform linear interpolation
+					lights[lightNames[i]].currentIntensity += (lights[lightNames[i]].targetIntensity - lights[lightNames[i]].currentIntensity) / interpolationFrames;
+					lights[lightNames[i]].children[0].intensity = lights[lightNames[i]].currentIntensity;
 				}
-		
-				currentDataPoint++;
 			}
+			currentDataPoint++;
 		}
-
-
-		function getElectrodeData(eegData, videoClipIndex, electrodeIndex) {
-			if (videoClipIndex < 0 || videoClipIndex >= eegData.length) {
-				throw new Error("Invalid video clip index");
-			}
-			if (electrodeIndex < 0 || electrodeIndex >= eegData[0].length) {
-				throw new Error("Invalid electrode index");
-			}
-		
-			return eegData[videoClipIndex][electrodeIndex];
-		}
-
+	}
 		function initGUI( uniforms ) {
 
 			const gui = new GUI( { title: 'Thickness Control' } );
 
-                        // Point Light 1 Controls
 			// const gui2 = new GUI({ title: 'Light Controls' });
 
 			// // Iterate over each light to create a folder and add controls
@@ -359,9 +367,7 @@ import * as THREE from 'three';
 
 		function render() {
 
-			// if ( model ) model.rotation.y = performance.now() / 5000;
-			// if ( model2 ) model2.rotation.y = performance.now() / 5000;
-			
+		
 			updateLightIntensities();
 
 
