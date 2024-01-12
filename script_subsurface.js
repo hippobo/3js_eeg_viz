@@ -298,7 +298,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 		
 		
 		function createProgressBar() {
-			const progressBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+			const progressBarMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c100 });
 			const progressBarBackgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
 		
 			const progressBarGeometry = new THREE.PlaneGeometry(1, 20);
