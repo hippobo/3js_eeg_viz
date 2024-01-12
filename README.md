@@ -16,6 +16,7 @@ This project is a Three.js-based visualization tool for displaying EEG (electroe
 
 - Use the slider at the top left to adjust the speed of display ( number of frames for interpolation)
 - Once an example is finished running, press the "Next Example" button to play a random next file. The number of the example (/10) is displayed at the top left.
+- You can access the site [here](https://hippobo.github.io/3js_eeg_viz/).
 
 ## File Structure
 - `index.html` - Main HTML document with layout and references to CSS/JavaScript.
