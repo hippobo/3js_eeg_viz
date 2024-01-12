@@ -19,6 +19,8 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 		let lowerBound;
 		let upperBound;
 		let textMesh;
+	
+
 		const canvas = document.getElementById('canvas');
 		const lightNames = ['fp1', 'fp2', 'fz', 'f3', 'f4', 'f7', 'f8', 'fc1', 'fc2', 'fc5', 'fc6' , 'cz', 'c3', 'c4', 't3', 't4', 'a1' ,'a2', 'cp1', 'cp2', 'cp5', 'cp6', 'pz', 'p3','p4', 't5', 't6', 'po3', 'po4', 'oz', 'o1', 'o2'];
 
@@ -35,6 +37,8 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 		let currentDataPoint = 0; 
 		let videoClipIndex = 0;
 	let interpolationFrames = 30;
+	let progressBar, progressBarBackground;
+		let maxDataPoints = 0;
 
 	const fontLoader = new FontLoader();
 
@@ -49,7 +53,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 			size: 40,
 			height: 10,
 			curveSegments: 12,
-			bevelEnabled: true,
+			bevelEnabled: false,
 			bevelThickness: 3,
 			bevelSize: 5,
 			bevelOffset: 1,
@@ -57,7 +61,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 		});
 		const textMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c100 });
 		textMesh = new THREE.Mesh(textGeometry, textMaterial);
-		textMesh.position.set(-100, 100, 0); // Adjust position as needed
+		textMesh.position.set(-300, 200, 0); // Adjust position as needed
 		scene.add(textMesh);
 	}
 
@@ -65,9 +69,9 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 		
 		init();
 
-		fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function ( font ) {
+		fontLoader.load('https://threejs.org/examples/fonts/droid/droid_sans_regular.typeface.json', function ( font ) {
 			
-		updateText( "Brain viz", font);
+		updateText( "EEG Brain vizualization", font);
 	});
 
 		animate();
@@ -91,6 +95,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 			// Lights
 			const ambient_light = new THREE.AmbientLight( 0xc1c1c1 , 3)
 			scene.add( ambient_light );
+			createProgressBar(); 
 
 			
 		
@@ -109,6 +114,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 				const percentiles  = findPercentiles(flatEEGData, 5, 95); // Using 5th and 95th percentiles
 				lowerBound = percentiles.lowerBound;
 				upperBound = percentiles.upperBound;
+				maxDataPoints = globalEEGData[videoClipIndex][0].length;
 				
 
 			})
@@ -279,7 +285,6 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 			videoClipIndex = Math.floor(Math.random() * maxVideoClips);
 			currentDataPoint = 0; 
 			document.getElementById('exampleNum').innerText = videoClipIndex; 
-			console.log('Random videoClipIndex:', videoClipIndex); 
 		});
 		
 		document.getElementById('interpolationSlider').addEventListener('input', (event) => {
@@ -292,7 +297,31 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 	
 		
 		
-
+		function createProgressBar() {
+			const progressBarMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+			const progressBarBackgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+		
+			const progressBarGeometry = new THREE.PlaneGeometry(1, 20);
+			progressBar = new THREE.Mesh(progressBarGeometry, progressBarMaterial);
+			progressBar.position.set(-500, -250, 0); // Set initial position to start of background
+			progressBar.scale.x = 0.001; // Start with an almost zero scale
+		
+		
+			const progressBarBackgroundGeometry = new THREE.PlaneGeometry(1020, 30);
+			progressBarBackground = new THREE.Mesh(progressBarBackgroundGeometry, progressBarBackgroundMaterial);
+			progressBarBackground.position.set(0, -250, -1); // Just behind the progress bar
+		
+			scene.add(progressBarBackground);
+			scene.add(progressBar);
+		}
+		
+		function updateProgressBar() {
+			const progress = currentDataPoint / maxDataPoints;
+			const progressBarWidth = 1000; // Width of the background bar
+			progressBar.scale.x = Math.max(progress * progressBarWidth, 0.001); // Scale based on progress, minimum 0.001
+			progressBar.position.x = -500 + progressBar.scale.x / 2; // Adjust position to align left
+		}
+		
 	lightNames.forEach(name => {
 		lights[name].currentIntensity = lights[name].children[0].intensity; // Store the initial intensity
 		lights[name].targetIntensity = lights[name].children[0].intensity; // Set a target intensity
@@ -303,6 +332,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 	
 		const numberOfElectrodes = 32;
 		if (currentDataPoint < globalEEGData[videoClipIndex][0].length) {
+			updateProgressBar(); 
 			for (let i = 0; i < numberOfElectrodes; i++) {
 				if (lights[lightNames[i]] && lights[lightNames[i]].children[0]) {
 					const electrodeData = globalEEGData[videoClipIndex][i];
