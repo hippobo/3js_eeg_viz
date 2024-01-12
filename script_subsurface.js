@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 
-		import Stats from 'three/addons/libs/stats.module.js';
+import Stats from 'three/addons/libs/stats.module.js';
 
-		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-		import { SubsurfaceScatteringShader } from 'three/addons/shaders/SubsurfaceScatteringShader.js';
-        import {OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { SubsurfaceScatteringShader } from 'three/addons/shaders/SubsurfaceScatteringShader.js';
+import {OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
 
 
 		let container, stats;
@@ -15,6 +18,7 @@ import * as THREE from 'three';
 		const lights = {};
 		let lowerBound;
 		let upperBound;
+		let textMesh;
 		const canvas = document.getElementById('canvas');
 		const lightNames = ['fp1', 'fp2', 'fz', 'f3', 'f4', 'f7', 'f8', 'fc1', 'fc2', 'fc5', 'fc6' , 'cz', 'c3', 'c4', 't3', 't4', 'a1' ,'a2', 'cp1', 'cp2', 'cp5', 'cp6', 'pz', 'p3','p4', 't5', 't6', 'po3', 'po4', 'oz', 'o1', 'o2'];
 
@@ -32,11 +36,40 @@ import * as THREE from 'three';
 		let videoClipIndex = 0;
 	let interpolationFrames = 30;
 
+	const fontLoader = new FontLoader();
 
+	
+
+	function updateText(newText, font) {
+		if (textMesh) {
+			scene.remove(textMesh); // Remove the existing text mesh
+		}
+		const textGeometry = new TextGeometry(newText, {
+			font: font,
+			size: 40,
+			height: 10,
+			curveSegments: 12,
+			bevelEnabled: true,
+			bevelThickness: 3,
+			bevelSize: 5,
+			bevelOffset: 1,
+			bevelSegments: 10
+		});
+		const textMaterial = new THREE.MeshBasicMaterial({ color: 0xc1c100 });
+		textMesh = new THREE.Mesh(textGeometry, textMaterial);
+		textMesh.position.set(-100, 100, 0); // Adjust position as needed
+		scene.add(textMesh);
+	}
 
 		
 		
 		init();
+
+		fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function ( font ) {
+			
+		updateText( "Brain viz", font);
+	});
+
 		animate();
 
 
@@ -58,6 +91,8 @@ import * as THREE from 'three';
 			// Lights
 			const ambient_light = new THREE.AmbientLight( 0xc1c1c1 , 3)
 			scene.add( ambient_light );
+
+			
 		
 			
 		lightNames.forEach(name => {
@@ -65,7 +100,7 @@ import * as THREE from 'three';
 		});
 
 		// Fetch the EEG data
-		fetch('./eeg_data_sub1.json')
+		fetch('./eeg_data_10ex.json')
 			.then((response) => response.json())
 			.then((eegData) => {
 				globalEEGData = eegData; // Store the data in the global variable
@@ -240,7 +275,7 @@ import * as THREE from 'three';
 		}
 		
 		document.getElementById('randomButton').addEventListener('click', () => {
-			const maxVideoClips = 28; 
+			const maxVideoClips = 10; 
 			videoClipIndex = Math.floor(Math.random() * maxVideoClips);
 			currentDataPoint = 0; 
 			document.getElementById('exampleNum').innerText = videoClipIndex; 
